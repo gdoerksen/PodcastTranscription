@@ -1,0 +1,12 @@
+torch>=1.13.1
+torchvision>=0.14.1
+torchaudio>=0.13.1
+torchtext>=0.14.1
+pytorch-lightning==1.8.6
+sanic==22.6.2
+transformers==4.21.2
+accelerate
+text-unidecode
+nemo-toolkit[asr]>=1.15.0
+openai-whisper>=20230124
+git+https://github.com/m-bain/whisperx.git

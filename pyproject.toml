@@ -1,8 +1,6 @@
-[tool.pdm]
-
 [project]
-name = ""
-version = ""
+name = "PodcastTranscriber"
+version = "0.1.0"
 description = ""
 authors = [
     {name = "Graham Doerksen", email = "46031209+gdoerksen@users.noreply.github.com"},
@@ -13,6 +11,16 @@ dependencies = [
     "torch>=1.13.1",
     "torchvision>=0.14.1",
     "torchaudio>=0.13.1",
+    "torchtext>=0.14.1",
+    "pytorch-lightning==1.8.6",
+    "sanic==22.6.2",
+    "transformers==4.21.2",
+    "accelerate",
+    "text-unidecode",
     "openai-whisper>=20230124",
     "whisperx @ git+https://github.com/m-bain/whisperx.git",
+    "nemo-toolkit[asr]>=1.15.0",
 ]
+
+[build-system]
+requires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]
