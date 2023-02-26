@@ -133,3 +133,7 @@ dmypy.json
 
 # visual studio
 .vs
+
+/logs
+/input
+/output

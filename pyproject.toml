@@ -17,6 +17,7 @@ dependencies = [
     "transformers==4.21.2",
     "accelerate",
     "text-unidecode",
+    "tinytag >= 1.8.1",
     "openai-whisper>=20230124",
     "whisperx @ git+https://github.com/m-bain/whisperx.git",
     "nemo-toolkit[asr]>=1.15.0",
