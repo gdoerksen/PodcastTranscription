@@ -11,6 +11,7 @@ from utils import configure_logging
 from metadata import TinyTagAudioMetadata
 from audio_processing import FFmpegSplitter, ffmpeg_to_16k
 from transcriber import WhisperTranscriber
+from diarizer import prep_NeMo, run_NeMo
 
 """
 * The user should decide:
@@ -83,6 +84,8 @@ if __name__ == "__main__":
     output_temp_dir.mkdir()
     logger.debug("Using temp directory: %s", output_temp_dir)
 
+    #TODO: instead of a uuid, use the input file name so we can use checkpoints to resume
+
     # TODO verify or parse these variables into correct format
     split_length_s = args.split_length
     logger.info("Using split length (seconds): %s", split_length_s)
@@ -91,12 +94,18 @@ if __name__ == "__main__":
 
     # Above this is config and setup
 
+    # ------- METADATA -------
+
     metadata = TinyTagAudioMetadata("Metadata", audio_in)
     #TODO debug log metadata
+
+    # ------- 16K CONVERSION -------
 
     audio_16k, log = ffmpeg_to_16k(audio_in, output_temp_dir)
     logger.info("Converted audio to 16k: %s", audio_16k)
     logger.debug("FFmpeg log: %s", log)
+
+    # ------- SPLIT -------
 
     if metadata.duration_s > split_length_s:
         audio_splitter = FFmpegSplitter(
@@ -111,6 +120,7 @@ if __name__ == "__main__":
     else:
         input_splits = [audio_16k]
 
+    # ------- WHISPER -------
 
     transcriber = WhisperTranscriber(
         # "WhisperTranscriber",
@@ -120,7 +130,12 @@ if __name__ == "__main__":
         language=LANGUAGE,
         )
 
-    timestamped_words = transcriber.transcribe()
-    transcriber.save_transcript(timestamped_words, output_dir)
+    # timestamped_words = transcriber.transcribe()
+    # transcriber.save_transcript(timestamped_words, output_dir)
+
+    # ------- NEMO -------
+
+    nemo_config = prep_NeMo(audio_16k, output_temp_dir)
+    run_NeMo(nemo_config)
 
     pass 
