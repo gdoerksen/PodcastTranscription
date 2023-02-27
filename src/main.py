@@ -10,6 +10,16 @@ import whisper
 from utils import configure_logging
 from metadata import TinyTagAudioMetadata
 from audio_processing import FFmpegSplitter
+from transcriber import WhisperTranscriber
+
+"""
+* The user should decide:
+    * whether to split the audio file or not.
+    * if the audio file is split, how long each split should be.
+    * if the audio file is split, how much overlap there should be between each split.
+
+* provide json config file for user to set these parameters
+"""
 
 if __name__ == "__main__":
 
@@ -52,6 +62,10 @@ if __name__ == "__main__":
     MODEL_SIZE = args.model
     logger.info("Using model: %s", MODEL_SIZE)
 
+    LANGUAGE = args.language
+    logger.info("Using language: %s", LANGUAGE)
+    #TODO: problem, this defaults to english, not None
+
     AUDIO_IN = args.input
     logger.info("Using file: %s", AUDIO_IN)
     audio_in = Path(AUDIO_IN)
@@ -75,30 +89,37 @@ if __name__ == "__main__":
     split_overlap_s = args.split_overlap
     logger.info("Using split overlap (seconds): %s", split_overlap_s)
 
+    # Above this is config and setup
+
     metadata = TinyTagAudioMetadata("Metadata", audio_in)
-
-    """
-    * The user should decide:
-        * whether to split the audio file or not.
-        * if the audio file is split, how long each split should be.
-        * if the audio file is split, how much overlap there should be between each split.
-
-    * provide json config file for user to set these parameters
-    """
 
     audio_16k = audio_in #TODO convert to 16k wav so that NeMo works
 
+    if metadata.duration_s > split_length_s:
 
-    audio_splitter = FFmpegSplitter(
-        "FFmpegSplitter",
-        audio_16k,
-        output_temp_dir,
-        metadata.duration_s,
-        split_length_s,
-        split_overlap_s,
-    )
+        audio_splitter = FFmpegSplitter(
+            "FFmpegSplitter",
+            audio_16k,
+            output_temp_dir,
+            metadata.duration_s,
+            split_length_s,
+            split_overlap_s,
+        )
 
-    splits = audio_splitter.split()
+        input_splits = audio_splitter.split()
+    else:
+        input_splits = [audio_16k]
+
+    transcriber = WhisperTranscriber(
+        # "WhisperTranscriber",
+        audio_in=audio_16k,
+        model_size=MODEL_SIZE,
+        device=DEVICE,
+        language=LANGUAGE,
+        )
+
+    timestamped_words = transcriber.transcribe()
+    transcriber.save_transcript(timestamped_words, output_dir)
 
     pass 
 
