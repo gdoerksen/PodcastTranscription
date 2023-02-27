@@ -9,7 +9,7 @@ import whisper
 
 from utils import configure_logging
 from metadata import TinyTagAudioMetadata
-from audio_processing import FFmpegSplitter
+from audio_processing import FFmpegSplitter, ffmpeg_to_16k
 from transcriber import WhisperTranscriber
 
 """
@@ -92,11 +92,13 @@ if __name__ == "__main__":
     # Above this is config and setup
 
     metadata = TinyTagAudioMetadata("Metadata", audio_in)
+    #TODO debug log metadata
 
-    audio_16k = audio_in #TODO convert to 16k wav so that NeMo works
+    audio_16k, log = ffmpeg_to_16k(audio_in, output_temp_dir)
+    logger.info("Converted audio to 16k: %s", audio_16k)
+    logger.debug("FFmpeg log: %s", log)
 
     if metadata.duration_s > split_length_s:
-
         audio_splitter = FFmpegSplitter(
             "FFmpegSplitter",
             audio_16k,
@@ -105,10 +107,10 @@ if __name__ == "__main__":
             split_length_s,
             split_overlap_s,
         )
-
         input_splits = audio_splitter.split()
     else:
         input_splits = [audio_16k]
+
 
     transcriber = WhisperTranscriber(
         # "WhisperTranscriber",
@@ -122,44 +124,3 @@ if __name__ == "__main__":
     transcriber.save_transcript(timestamped_words, output_dir)
 
     pass 
-
-
-
-
-
-
-
-    # TODO convert to 16k wav so that NeMo works 
-    # TODO convert to mono 
-    # Consider 44100? 
-    # ffmpeg -i .\C1E2_IntoTheMuck.mp3 -vn -acodec pcm_s16le -ac 1 -ar 16000 -f wav foo16.wav
-
-    # model = whisper.load_model(MODEL_SIZE, device=DEVICE)
-
-    # # RUN WHISPER
-    # # TODO check if output file already exists
-
-    # results = model.transcribe(FILE, beam_size=None)
-    # """
-    # Beam size if None by default (Greedy Decoding). You can also set the
-    # beam_size to some number like 5. This will increase in better transcription
-    # quality but it'll increase runtime considerabley.
-    # """
-
-    # if args.output is None:
-    #     # create output file name
-    #     input = Path(args.input)
-    #     output = input.stem + ".txt"
-    #     output_path = cwd / OUTPUT_DIR / output
-    # else:
-    #     output_path = cwd / OUTPUT_DIR / args.output
-    # # save results object to file
-    # with open(str(output_path), "w") as f:
-    #     f.write(str(results))
-
-    # output_path = cwd / OUTPUT_DIR / "output2.txt"
-    # # save results text to file
-    # with open(str(output_path), "w") as f:
-    #     f.write(results["text"])
-
-
