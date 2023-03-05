@@ -57,10 +57,15 @@ def prep_NeMo(audio_in: Path, output_dir: Path):
 
     return config 
 
-def run_NeMo(config):
-    # Run NeMo diarization
+def run_NeMo(config)->Path:
+    """
+    Runs the NeMo diarization model. Output is saved based on prep_NeMo() config.
+    """
+    
     model = ClusteringDiarizer(cfg=config)
     model.diarize()
+    rttm_file = Path(config.diarizer.diarizer.out_dir) / 'pred_rttms' / Path(config.diarizer.manifest_filepath).stem + '.rttm'
+    return rttm_file
 
     # diarizer = SpeakerDiarizer(cfg=config.diarizer)
     # diarizer.diarize()

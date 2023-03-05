@@ -12,6 +12,7 @@ from metadata import TinyTagAudioMetadata
 from audio_processing import FFmpegSplitter, ffmpeg_to_16k
 from transcriber import WhisperTranscriber
 from diarizer import prep_NeMo, run_NeMo
+from rttm_combiner import SegmentCombiner
 
 """
 * The user should decide:
@@ -119,7 +120,7 @@ if __name__ == "__main__":
         input_splits = audio_splitter.split()
     else:
         input_splits = [audio_16k]
-
+    
     # ------- WHISPER -------
 
     transcriber = WhisperTranscriber(
@@ -134,8 +135,32 @@ if __name__ == "__main__":
     # transcriber.save_transcript(timestamped_words, output_dir)
 
     # ------- NEMO -------
+    rttm_splits = []
+    for split in input_splits:
+        nemo_config = prep_NeMo(split, output_temp_dir)
+        rttm_file = run_NeMo(nemo_config)
+        rttm_splits.append(rttm_file)
 
-    nemo_config = prep_NeMo(audio_16k, output_temp_dir)
-    run_NeMo(nemo_config)
+
+    # ------- SEGMENT COMBINE RTTM -------
+
+    # anotha for loop but with two files at a time!
+
+    for i in range(len(rttm_splits)-1):
+        rttm_file_path_1 = rttm_splits[i]
+        rttm_file_path_2 = rttm_splits[i+1]
+        
+        signal_quality_s = 0.1
+        
+
+        segcom = SegmentCombiner(
+        rttm_file_path_1,
+        rttm_file_path_2,
+        rttm_output_file_path,
+        split_length_s,
+        split_overlap_s,
+        signal_quality_s
+        )
+        segcom.run()
 
     pass 
