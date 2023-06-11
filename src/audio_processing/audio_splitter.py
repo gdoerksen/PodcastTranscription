@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from os import PathLike
+from pathlib import Path
 
 class AudioSplitter(ABC):
     def __init__(self, 
-                input_file: PathLike,
-                output_directory: PathLike,
+                input_file: Path,
+                output_directory: Path,
                 duration_s: float,
                 split_s: int,
                 overlap_s: int,
@@ -17,5 +17,5 @@ class AudioSplitter(ABC):
         self.overlap_s = overlap_s
 
     @abstractmethod
-    def split(self)->list[PathLike] :
+    def split(self)->list[Path] :
         ...

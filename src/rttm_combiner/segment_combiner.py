@@ -1,15 +1,15 @@
-import pandas as pd
+from pathlib import Path
 import math
 
-from os import PathLike
-from pathlib import Path
+import pandas as pd
+
 
 class SegmentCombiner: 
     def __init__(
         self, 
-        rttm_file_path_1 : PathLike, # pure path to the first segment file
-        rttm_file_path_2 : PathLike, # pure path to the second segment file
-        output_file_path : PathLike, # pure path to the output file
+        rttm_file_path_1 : Path, # pure path to the first segment file
+        rttm_file_path_2 : Path, # pure path to the second segment file
+        output_dir : Path, # pure path to the output directory
         duration_no_overlap_s: float = 3600.0, 
         duration_overlap_s: float = 300.0,
         signal_quality_s: float = 0.1
@@ -17,7 +17,7 @@ class SegmentCombiner:
         # injected
         self.rttm_file_path_1 = rttm_file_path_1
         self.rttm_file_path_2 = rttm_file_path_2
-        self.output_file_path = output_file_path
+        self.output_dir = output_dir
         self.duration_no_overlap_s = duration_no_overlap_s
         self.duration_overlap_s = duration_overlap_s
         self.signal_quality_s = signal_quality_s
@@ -26,7 +26,7 @@ class SegmentCombiner:
         self.first_overlap_cutoff_s = duration_no_overlap_s - duration_overlap_s # seconds
         self.second_overlap_cutoff_s = duration_overlap_s # seconds
 
-    def load_rttm(self, file_path: PathLike):
+    def load_rttm(self, file_path: Path):
         columnn_names = ['type', 'file', 'channel', 'start_s', 'duration_s', 'NA1', 'NA2', 'speaker', 'NA3', 'NA4']
         sep = '\s+'
         
@@ -122,9 +122,9 @@ class SegmentCombiner:
             speaker_assignments['speaker_' + str(result[i])] = 'speaker_' + str(i)
         return speaker_assignments
 
-    def run(self):
-        rttm_1_df = self.load_rttm(self.rttm_file_path_1)
-        rttm_2_df = self.load_rttm(self.rttm_file_path_2)
+    def run(self)->Path:
+        rttm_1_df = self.load_rttm(self.rttm_file_path_1) #TODO str on path? 
+        rttm_2_df = self.load_rttm(self.rttm_file_path_2) #TODO str on path? 
 
         overlap_1_df = self.preprocess_rttm(rttm_1_df, is_first_segment=True)
         overlap_2_df = self.preprocess_rttm(rttm_2_df, is_first_segment=False)
@@ -154,11 +154,15 @@ class SegmentCombiner:
 
         combined = pd.concat([rttm_1_df, rttm_2_df.iloc[index:]  ], ignore_index=True)
 
+        output_file_path = self.output_dir / (self.rttm_file_path_1.stem + '_combined.rttm')
+
         # write the combined segment to a file
         combined.to_csv(
-            self.output_file_path, 
+            output_file_path, 
             sep=' ', 
             header=False, 
             index=False, 
             float_format='%.3f',
             na_rep='<NA>')
+
+        return output_file_path

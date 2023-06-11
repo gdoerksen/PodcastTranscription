@@ -22,9 +22,9 @@ def prep_NeMo(audio_in: Path, output_dir: Path):
         'uniq_id': "",
     }   
 
-    if not manifest_path.exists():
-        with open(manifest_path, 'w') as f:
-            f.write(json.dumps(diarize_manifest))
+    # if not manifest_path.exists():
+    with manifest_path.open('w') as f:
+        f.write(json.dumps(diarize_manifest))
 
     model_config = output_dir / 'diar_infer_meeting.yaml'
     if not model_config.exists():
@@ -57,14 +57,18 @@ def prep_NeMo(audio_in: Path, output_dir: Path):
 
     return config 
 
-def run_NeMo(config)->Path:
+def run_NeMo(config, audio_in:Path)->Path:
     """
     Runs the NeMo diarization model. Output is saved based on prep_NeMo() config.
     """
     
     model = ClusteringDiarizer(cfg=config)
     model.diarize()
-    rttm_file = Path(config.diarizer.diarizer.out_dir) / 'pred_rttms' / Path(config.diarizer.manifest_filepath).stem + '.rttm'
+    rttm_file = Path(config.diarizer.out_dir) / 'pred_rttms' / (audio_in.stem + '.rttm')
+
+    #TODO move to temp dir to prevent overwriting on next 
+    # rttm_file.replace(audio_in.parent / (audio_in.stem + '.rttm'))
+
     return rttm_file
 
     # diarizer = SpeakerDiarizer(cfg=config.diarizer)

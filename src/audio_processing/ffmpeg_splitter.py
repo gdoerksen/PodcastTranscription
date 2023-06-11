@@ -1,6 +1,6 @@
 import math 
 
-from os import PathLike
+from pathlib import Path
 from dataclasses import dataclass
 from subprocess import run
 
@@ -26,8 +26,8 @@ class FFmpegSplitter(LoggingObject, AudioSplitter):
     def __init__(
         self,
         name: str,
-        input_file: PathLike,
-        output_directory: PathLike,
+        input_file: Path,
+        output_directory: Path,
         duration_s: float, #TODO could be derived from input_file
         split_s: int,
         overlap_s: int):
@@ -41,8 +41,8 @@ class FFmpegSplitter(LoggingObject, AudioSplitter):
             overlap_s)
 
         """ audio splitter 
-        input_file: PathLike 
-        output_directory: PathLike
+        input_file: Path 
+        output_directory: Path
 
         duration_s: float
         split_s: float? 3600, subsegments are split into this size (plus the overlap)
@@ -50,7 +50,7 @@ class FFmpegSplitter(LoggingObject, AudioSplitter):
         """
 
 
-    def split(self)->list[PathLike]:
+    def split(self)->list[Path]:
         split_list = self._get_splits(self.duration_s)
 
         files_list = []
@@ -63,6 +63,8 @@ class FFmpegSplitter(LoggingObject, AudioSplitter):
             self.logger.debug(output)
             files_list.append(output_file)
 
+        self.logger.debug(f"Split {self.input_file} into {len(files_list)} files")
+        self.logger.debug(f"Split list: {split_list}")
         return files_list
         # end _split
 

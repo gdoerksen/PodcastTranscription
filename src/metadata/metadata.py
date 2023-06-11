@@ -1,10 +1,10 @@
-from os import PathLike
+from pathlib import Path
 from dataclasses import dataclass
 from abc import ABC
 
 @dataclass
 class AudioMetadata(ABC):
-    path: PathLike
+    path: Path
     duration_s : float
     sample_rate_hz : int
     bitrate_kbps : float
@@ -13,5 +13,5 @@ class AudioMetadata(ABC):
     title : str
     composer : str
     
-    def __init__(self, path: PathLike):
+    def __init__(self, path: Path):
         self.path = path

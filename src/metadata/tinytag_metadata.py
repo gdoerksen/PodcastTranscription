@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from os import PathLike
+from pathlib import Path
 from tinytag import TinyTag
 
 from utils import LoggingObject
@@ -9,14 +8,14 @@ from .metadata import AudioMetadata
 
 class TinyTagAudioMetadata(LoggingObject, AudioMetadata):
         
-    def __init__(self, name: str, path: PathLike):
+    def __init__(self, name: str, path: Path):
         super().__init__(name, path)
 
         try: 
             tag = TinyTag.get(path)
-        except FileNotFoundError as e:
-            self.logger.exception(e)
-            raise e
+        except FileNotFoundError as ex:
+            self.logger.exception(ex)
+            raise ex
             
         self.duration_s = tag.duration
         self.sample_rate_hz = tag.samplerate

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-def load_rttm_file( rttm_file_path: Path )-> list[int, int, int]:
+def load_rttm_file( rttm_file_path: Path )-> list[ list[int] ]:
     """
     Load a speaker timetsamp .rttm file and return a list of lists of the form: [start_time, end_time, speaker_id]
     """

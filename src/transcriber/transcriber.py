@@ -43,16 +43,18 @@ class WhisperTranscriber:
 
         return result_aligned
     
-    def save_transcript(self, transcription, output_dir: Path):
+    def save_transcript(self, transcription, output_dir: Path)-> Path:
         """Save transcript to file"""
 
         filename = output_dir / f'{self.audio_in.stem}.txt'
         
-        with open(filename, 'w+') as f:
+        with filename.open('w+') as f:
             for line in transcription['word_segments']:
                 line_temp = line.copy()
                 line_temp['text'] = line_temp['text'].strip()
                 f.write(f'{json.dumps(line_temp)}\n')
+
+        return filename
 
     def load_transcript(self, output_dir: Path):
         """Load transcript from file"""
