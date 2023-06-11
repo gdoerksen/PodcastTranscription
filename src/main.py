@@ -47,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input", type=str, default="input.wav", help="Path to audio file, default input.wav")
     parser.add_argument("-o", "--output", type=str, default=None, help="Path to output directory, no default")
     parser.add_argument("-m", "--model", type=str, default="medium", help="Whisper model to use, default medium")
+    parser.add_argument("-n", "--number-of-speakers", type=int, default=None, help="Number of speakers, default none (auto)")
     parser.add_argument("-l", "--language", type=str, default="en", help="Language to use, default english (en)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--split-length", type=int, default=3600, help="audio split length in seconds")
@@ -88,6 +89,22 @@ if __name__ == "__main__":
 
     logger.info("Using file: %s", AUDIO_IN)
     audio_in = Path(AUDIO_IN)
+
+    SPEAKERS = args.number_of_speakers
+    if SPEAKERS is None:
+        logger.info("Number of speaker will be automatically determined")
+    else:
+        # check if speakers is an int
+        if not isinstance(SPEAKERS, int):
+            message = "Number of speakers must be an integer"
+            logger.error(message)
+            raise ValueError(message)
+        elif SPEAKERS < 2:
+            message = "Number of speakers must be greater than 1"
+            logger.error(message)
+            raise ValueError(message)
+
+        logger.info("Using number of speakers: %s", SPEAKERS)
 
     #TODO check that OUTPUT_DIR is actually a directory and that it exists
     OUTPUT_DIR = args.output
@@ -152,13 +169,17 @@ if __name__ == "__main__":
     timestamped_words_filepath = transcriber.save_transcript(timestamped_words, output_dir)
 
     # ------- NEMO -------
+    logger.info("Running NeMo")
+
     rttm_splits = []
     for split in input_splits:
-        nemo_config = prep_NeMo(split, output_temp_dir)
+        logger.info("Processing split: %s", split)
+        nemo_config = prep_NeMo(split, output_temp_dir, SPEAKERS)
         rttm_file = run_NeMo(nemo_config, split)
         rttm_splits.append(rttm_file)
 
     # ------- SEGMENT COMBINE RTTM -------
+    logger.info("Combining RTTM files")
 
     rttm_output_file_path = rttm_splits[0]
     for i in range(1, len(rttm_splits)):
@@ -179,6 +200,7 @@ if __name__ == "__main__":
     rttm_output_file_path = rttm_output_file_path.rename(output_dir / "combined_output.rttm")
 
     # ------- COMBINE WORDS AND RTTM -------
+    logger.info("Combining words and RTTM")
 
     # timestamped_words_filepath = Path("/home/gdoerksen/repos/PodcastTranscription/output/C1E2_IntoTheMuck_16k.txt")
 
@@ -190,11 +212,13 @@ if __name__ == "__main__":
 
 
     # ------- REALIGNMENT VIA PUNCTUATION -------`  
+    logger.info("Realigning via punctuation")
 
     wsm = get_realigned_ws_mapping_with_punctuation(combined_words_and_speakers)
     ssm = get_sentences_speaker_mapping(wsm, speakers)
-    save_diarized_transcript(ssm)
+    save_diarized_transcript(ssm, output_dir)
 
+    logger.info("Completed diarization on file: %s", audio_in)
 
     pass
 

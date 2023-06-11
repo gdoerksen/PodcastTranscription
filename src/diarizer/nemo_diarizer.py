@@ -1,4 +1,4 @@
-import os
+from typing import Optional
 import json
 from pathlib import Path
 
@@ -6,7 +6,7 @@ from omegaconf import OmegaConf
 import wget 
 from nemo.collections.asr.models.msdd_models import ClusteringDiarizer
 
-def prep_NeMo(audio_in: Path, output_dir: Path):
+def prep_NeMo(audio_in: Path, output_dir: Path, num_speakers:Optional[int]=None):
 
     manifest = 'manifest.json'
     manifest_path = output_dir / manifest
@@ -17,10 +17,10 @@ def prep_NeMo(audio_in: Path, output_dir: Path):
         'duration':  None,
         'label': "infer",
         'text': "-",            
-        'num_speakers': None,           #TODO should be set if we know it
+        'num_speakers': num_speakers,
         'rttm_filepath': None,          # Is this actually required?
         'uniq_id': "",
-    }   
+    }
 
     # if not manifest_path.exists():
     with manifest_path.open('w') as f:
@@ -66,10 +66,7 @@ def run_NeMo(config, audio_in:Path)->Path:
     model.diarize()
     rttm_file = Path(config.diarizer.out_dir) / 'pred_rttms' / (audio_in.stem + '.rttm')
 
-    #TODO move to temp dir to prevent overwriting on next 
-    # rttm_file.replace(audio_in.parent / (audio_in.stem + '.rttm'))
+    # move rttm file to output dir
+    rttm_file = rttm_file.rename(audio_in.parent / (audio_in.stem + '.rttm'))
 
     return rttm_file
-
-    # diarizer = SpeakerDiarizer(cfg=config.diarizer)
-    # diarizer.diarize()
